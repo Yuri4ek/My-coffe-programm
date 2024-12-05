@@ -46,6 +46,19 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout"/>
    </widget>
+   <widget class="QPushButton" name="add_coffe">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>30</y>
+      <width>171</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Добавить котэ</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

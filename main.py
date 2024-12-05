@@ -26,6 +26,47 @@ class CustomDialog(QDialog):
         self.setLayout(layout)
 
 
+class Coffe_add_replace(QDialog):
+    def __init__(self, command):
+        self.command = command
+
+        super().__init__()
+        uic.loadUi("addEditCoffeeForm.ui", self)
+
+        self.add_replace.setText(command)
+
+        self.add_replace.clicked.connect(self.run)
+
+    def run(self):
+        con = sqlite3.connect("coffee.sqlite")
+
+        a = self.lineEdit.text()
+        b = self.lineEdit_2.text()
+        c = self.lineEdit_3.text()
+        d = self.lineEdit_4.text()
+        e = self.lineEdit_5.text()
+        f = self.lineEdit_6.text()
+        data = (a, b, c, d, e, f,)
+
+        if self.command == "add":
+            sql = """
+                    INSERT INTO coffe
+                    (nameVariety, degreeRoasting, groundGrains,
+                    descriptionTaste, price, packingVolume) 
+                    values(?, ?, ?, ?, ?, ?)
+                """
+
+        with con:
+            con.execute(sql, data)
+
+        self.lineEdit.setText("")
+        self.lineEdit_2.setText("")
+        self.lineEdit_4.setText("")
+        self.lineEdit_5.setText("")
+        self.lineEdit_6.setText("")
+        self.lineEdit_3.setText("")
+
+
 class CoffeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -44,12 +85,40 @@ class CoffeWindow(QMainWindow):
 
             self.verticalLayout.addWidget(c_btn)
 
+        self.add_coffe.clicked.connect(self.add_coffee)
+
+    def add_coffee(self):
+        command = "add"
+
+        Coffe_add_replace(command).exec()
+
+        con = sqlite3.connect("coffee.sqlite")
+
+        with con:
+            sql = f"""SELECT * FROM coffe"""
+            new_coffes = list(con.execute(sql))
+
+        coffe = set(new_coffes) - set(self.coffes)
+        coffe = coffe.pop()
+
+        c_btn = QPushButton(coffe[1])
+        c_btn.resize(740, 40)
+        c_btn.clicked.connect(self.click_coffe)
+
+        self.verticalLayout.addWidget(c_btn)
+
+        self.coffes = new_coffes
+
     def click_coffe(self):
+        command = "replace"
+
         name = self.sender().text()
 
         for coffe in self.coffes:
             if coffe[1] == name:
                 CustomDialog(coffe).exec()
+
+                Coffe_add_replace(command).exec()
 
                 break
 
