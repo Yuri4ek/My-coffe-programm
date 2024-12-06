@@ -27,8 +27,9 @@ class CustomDialog(QDialog):
 
 
 class Coffe_add_replace(QDialog):
-    def __init__(self, command):
+    def __init__(self, command, name):
         self.command = command
+        self.name = name
 
         super().__init__()
         uic.loadUi("addEditCoffeeForm.ui", self)
@@ -46,25 +47,34 @@ class Coffe_add_replace(QDialog):
         d = self.lineEdit_4.text()
         e = self.lineEdit_5.text()
         f = self.lineEdit_6.text()
-        data = (a, b, c, d, e, f,)
 
-        if self.command == "add":
-            sql = """
-                    INSERT INTO coffe
-                    (nameVariety, degreeRoasting, groundGrains,
-                    descriptionTaste, price, packingVolume) 
-                    values(?, ?, ?, ?, ?, ?)
-                """
+        if a != "" and b != "" and c != "" and d != "" and e != "" and f != "":
+            if self.command == "add":
+                data = (a, b, c, d, e, f,)
+                sql = """
+                        INSERT INTO coffe
+                        (nameVariety, degreeRoasting, groundGrains,
+                        descriptionTaste, price, packingVolume) 
+                        values(?, ?, ?, ?, ?, ?)
+                    """
+            else:
+                data = (a, b, c, d, e, f, self.name,)
+                sql = """
+                        UPDATE coffe 
+                        SET nameVariety=?, degreeRoasting=?, groundGrains=?, 
+                        descriptionTaste=?, price=?, packingVolume=?
+                        WHERE nameVariety = ?
+                    """
 
-        with con:
-            con.execute(sql, data)
+            with con:
+                con.execute(sql, data)
 
-        self.lineEdit.setText("")
-        self.lineEdit_2.setText("")
-        self.lineEdit_4.setText("")
-        self.lineEdit_5.setText("")
-        self.lineEdit_6.setText("")
-        self.lineEdit_3.setText("")
+            self.lineEdit.setText("")
+            self.lineEdit_2.setText("")
+            self.lineEdit_4.setText("")
+            self.lineEdit_5.setText("")
+            self.lineEdit_6.setText("")
+            self.lineEdit_3.setText("")
 
 
 class CoffeWindow(QMainWindow):
@@ -78,9 +88,13 @@ class CoffeWindow(QMainWindow):
             sql = f"""SELECT * FROM coffe"""
             self.coffes = list(con.execute(sql))
 
+        self.btns = []
         for coffe in self.coffes:
             c_btn = QPushButton(coffe[1])
             c_btn.resize(740, 40)
+
+            self.btns.append(c_btn)
+
             c_btn.clicked.connect(self.click_coffe)
 
             self.verticalLayout.addWidget(c_btn)
@@ -90,7 +104,7 @@ class CoffeWindow(QMainWindow):
     def add_coffee(self):
         command = "add"
 
-        Coffe_add_replace(command).exec()
+        Coffe_add_replace(command, None).exec()
 
         con = sqlite3.connect("coffee.sqlite")
 
@@ -99,15 +113,20 @@ class CoffeWindow(QMainWindow):
             new_coffes = list(con.execute(sql))
 
         coffe = set(new_coffes) - set(self.coffes)
-        coffe = coffe.pop()
 
-        c_btn = QPushButton(coffe[1])
-        c_btn.resize(740, 40)
-        c_btn.clicked.connect(self.click_coffe)
+        if len(coffe) != 0:
+            coffe = coffe.pop()
 
-        self.verticalLayout.addWidget(c_btn)
+            c_btn = QPushButton(coffe[1])
+            c_btn.resize(740, 40)
 
-        self.coffes = new_coffes
+            self.btns.append(c_btn)
+
+            c_btn.clicked.connect(self.click_coffe)
+
+            self.verticalLayout.addWidget(c_btn)
+
+            self.coffes = new_coffes
 
     def click_coffe(self):
         command = "replace"
@@ -118,7 +137,28 @@ class CoffeWindow(QMainWindow):
             if coffe[1] == name:
                 CustomDialog(coffe).exec()
 
-                Coffe_add_replace(command).exec()
+                Coffe_add_replace(command, name).exec()
+
+                for c_btn in self.btns:
+                    c_btn.hide()
+
+                self.btns = []
+
+                con = sqlite3.connect("coffee.sqlite")
+
+                with con:
+                    sql = f"""SELECT * FROM coffe"""
+                    self.coffes = list(con.execute(sql))
+
+                for coffe in self.coffes:
+                    c_btn = QPushButton(coffe[1])
+                    c_btn.resize(740, 40)
+
+                    self.btns.append(c_btn)
+
+                    c_btn.clicked.connect(self.click_coffe)
+
+                    self.verticalLayout.addWidget(c_btn)
 
                 break
 
