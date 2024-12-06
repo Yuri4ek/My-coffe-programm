@@ -6,6 +6,9 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, \
 
 import sqlite3
 
+from mainUi import Ui_Coffe
+from addEditCoffeeFormUi import Ui_MainWindow
+
 
 class CustomDialog(QDialog):
     def __init__(self, coffe):
@@ -26,20 +29,20 @@ class CustomDialog(QDialog):
         self.setLayout(layout)
 
 
-class Coffe_add_replace(QDialog):
+class Coffe_add_replace(QDialog, Ui_MainWindow):
     def __init__(self, command, name):
         self.command = command
         self.name = name
 
         super().__init__()
-        uic.loadUi("addEditCoffeeForm.ui", self)
+        self.setupUi(self)
 
         self.add_replace.setText(command)
 
         self.add_replace.clicked.connect(self.run)
 
     def run(self):
-        con = sqlite3.connect("coffee.sqlite")
+        con = sqlite3.connect("data/coffee.sqlite")
 
         a = self.lineEdit.text()
         b = self.lineEdit_2.text()
@@ -77,12 +80,12 @@ class Coffe_add_replace(QDialog):
             self.lineEdit_3.setText("")
 
 
-class CoffeWindow(QMainWindow):
+class CoffeWindow(QMainWindow, Ui_Coffe):
     def __init__(self):
         super().__init__()
-        uic.loadUi("main.ui", self)
+        self.setupUi(self)
 
-        con = sqlite3.connect("coffee.sqlite")
+        con = sqlite3.connect("data/coffee.sqlite")
 
         with con:
             sql = f"""SELECT * FROM coffe"""
@@ -106,7 +109,7 @@ class CoffeWindow(QMainWindow):
 
         Coffe_add_replace(command, None).exec()
 
-        con = sqlite3.connect("coffee.sqlite")
+        con = sqlite3.connect("data/coffee.sqlite")
 
         with con:
             sql = f"""SELECT * FROM coffe"""
@@ -144,7 +147,7 @@ class CoffeWindow(QMainWindow):
 
                 self.btns = []
 
-                con = sqlite3.connect("coffee.sqlite")
+                con = sqlite3.connect("data/coffee.sqlite")
 
                 with con:
                     sql = f"""SELECT * FROM coffe"""
